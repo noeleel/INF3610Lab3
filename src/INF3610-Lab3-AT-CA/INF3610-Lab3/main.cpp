@@ -9,6 +9,7 @@
 #include "Reader.h"
 #include "DataRAM.h"
 #include "CacheMem.h"
+#include "Writer.h"
 
 #define RAMSIZE 0x200000
 
@@ -28,7 +29,10 @@ int sc_main(int arg_count, char **arg_value)
 	sc_clock clk("SysClock", clk_freq, simTimeUnit, 0.5);
 
 	// Components
-	//TODO : Déclaration des modules
+	//TODO : DÃ©claration des modules
+	Reader reader("reader");
+	Writer writer("writer");
+	DataRAM dataRAM("dataRAM", "image.mem", RAMSIZE, false);
 
 	// Signals
 	sc_signal<unsigned int, SC_MANY_WRITERS> data;
@@ -38,31 +42,72 @@ int sc_main(int arg_count, char **arg_value)
 	sc_signal<bool, SC_MANY_WRITERS> reqRead;
 	sc_signal<bool, SC_MANY_WRITERS> ackReaderWriter;
 	// ...
+	sc_signal<bool, SC_MANY_WRITERS> reqWrite;
+	sc_signal<bool, SC_MANY_WRITERS> reqCache;
+	sc_signal<bool, SC_MANY_WRITERS> ackCache;
 
 	// Connexions
 	// TODO: Ajouter connexions 
+	reader.clk(clk);
+	reader.dataPortRAM(dataRAM);
+	reader.data(data);
+	reader.address(address);
+	reader.ack(ackReaderWriter);
+	reader.request(reqRead);
+
+	writer.clk(clk);
+	writer.dataPortRAM(dataRAM);
+	writer.data(data);
+	writer.address(address);
+	writer.ack(ackReaderWriter);
+	writer.request(reqWrite);
 
 	const bool utiliseCacheMem = false;
 
 	if (!utiliseCacheMem) {
 		Sobel sobel("Sobel");
 
-		/* à compléter (connexion ports)*/
-
-		// Démarrage de l'application
-		cout << "Démarrage de la simulation." << endl;
+		/* Ã  complÃ©ter (connexion ports)*/
+		sobel.clk(clk);
+		sobel.address(address);
+		sobel.data(data);
+		sobel.requestRead(reqRead);
+		sobel.requestWrite(reqWrite);
+		sobel.ack(ackReaderWriter);
+		// DÃ©marrage de l'application
+		cout << "DÃ©marrage de la simulation." << endl;
 		sc_start(-1, sc_core::sc_time_unit(sim_units));
-		cout << endl << "Simulation s'est terminée à " << sc_time_stamp();
+		cout << endl << "Simulation s'est terminÃ©e Ã  " << sc_time_stamp();
 	} else {
 		Sobelv2 sobel("Sobel");
 		CacheMem cacheMem("CacheMem");
 
-		/* à compléter (connexion ports)*/
+		/* Ã  complÃ©ter (connexion ports)*/
+		sobel.clk(clk);
+		sobel.address(address);
+		sobel.dataRW(data);
+		sobel.requestRead(reqRead);
+		sobel.requestWrite(reqWrite);
+		sobel.ackReaderWriter(ackReaderWriter);
+		sobel.addressRes(addressData);
+		sobel.length(length);
+		sobel.requestCache(reqCache);
+		sobel.ackCache(ackCache);
 
-		// Démarrage de l'application
-		cout << "Démarrage de la simulation." << endl;
+		cacheMem.clk(clk);
+		cacheMem.addressData(addressData);
+		cacheMem.length(length);
+		cacheMem.requestFromCPU(reqCache);
+		cacheMem.ackToCPU(ackCache);
+		cacheMem.address(address);
+		cacheMem.dataReader(data);
+		cacheMem.requestToReader(reqRead);
+		cacheMem.ackFromReader(ackReaderWriter);
+	
+		// DÃ©marrage de l'application
+		cout << "DÃ©marrage de la simulation." << endl;
 		sc_start(-1, sc_core::sc_time_unit(sim_units));
-		cout << endl << "Simulation s'est terminée à " << sc_time_stamp();
+		cout << endl << "Simulation s'est terminÃ©e Ã  " << sc_time_stamp();
 
 	}
 
