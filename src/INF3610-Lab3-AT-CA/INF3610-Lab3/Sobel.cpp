@@ -12,11 +12,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 Sobel::Sobel( sc_module_name name )
-/* À compléter */
+/* Ã€ complÃ©ter */
 {
 	/*
 	
-	À compléter
+	Ã€ complÃ©ter
 	
 	*/
 	SC_THREAD(thread);
@@ -33,7 +33,7 @@ Sobel::~Sobel()
 {
 	/*
 	
-	À compléter
+	Ã€ complÃ©ter
 	
 	*/
 }
@@ -69,10 +69,62 @@ void Sobel::thread(void)
 {
 	/*
 	
-	À compléter
+	Ã€ complÃ©ter
 	
 	*/
+	unsigned int address = 0;
+	unsigned int imgWidth, imgHeight, imgSize, pixel, data;
 
+	while (true) {
+		imgWidth = Read(address);
+		address += 4;
+		imgHeight = Read(address);
+		imgSize = imgWidth * imgHeight;
+		uint8_t* image = new uint8_t[imgSize];
+		uint8_t* result = new uint8_t[imgSize];
+		int * imageAsInt = reinterpret_cast<int*>(image);
+		int * resultAsInt = reinterpret_cast<int*>(result);
+
+		int index = 0;
+		address += 4;
+		for (int i = 0; i < imgHeight; i++) {
+			for (int j = 0; j < imgWidth; j += 4) {
+				index = i * imgWidth + j;
+				pixel = Read(address + index);
+				image[index] = pixel & 0xFF;
+				image[index + 1] = (pixel >> 8) & 0xFF;
+				image[index + 2] = (pixel >> 16) & 0xFF;
+				image[index + 3] = pixel >> 24;
+			}
+		}
+
+		for (int i = 0; i < imgHeight; i++) {
+			for (int j = 0; j < imgWidth; j += 4) {
+				index = i * imgWidth + j;
+				if (i == 0 || i == imgHeight - 1) {
+					Write(address + index, 0);
+				}
+				else if (j % imgWidth == 0 || j % imgWidth == imgWidth - 1) {
+					Write(address + index, 0);
+				}
+				else {
+					result[index] = sobel_operator(index, imgWidth, image);
+					result[index + 1] = sobel_operator(index + 1, imgWidth, image) << 8;
+					result[index + 2] = sobel_operator(index + 2, imgWidth, image) << 16;
+					result[index + 3] = sobel_operator(index + 3, imgWidth, image) << 24;
+					data = (result[index] | result[index + 1] | result[index+ 2] | result[index + 3]);
+					Write(address + index, data);
+				}
+				wait(clk->posedge_event);
+			}
+		}
+
+		delete image;
+		delete result;
+
+		sc_stop();
+		wait();
+	}
 }
 
 
