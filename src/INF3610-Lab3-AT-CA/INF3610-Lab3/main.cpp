@@ -62,7 +62,8 @@ int sc_main(int arg_count, char **arg_value)
 	writer.ack(ackReaderWriter);
 	writer.request(reqWrite);
 
-	const bool utiliseCacheMem = false;
+	//const bool utiliseCacheMem = false;
+	const bool utiliseCacheMem = true;
 
 	if (!utiliseCacheMem) {
 		Sobel sobel("Sobel");

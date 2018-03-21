@@ -11,7 +11,7 @@
 //	Constructeur
 //
 ///////////////////////////////////////////////////////////////////////////////
-Sobel::Sobel( sc_module_name name )
+Sobel::Sobel( sc_module_name name ) : sc_module(name)
 /* À compléter */
 {
 	/*
@@ -108,14 +108,14 @@ void Sobel::thread(void)
 					Write(address + index, 0);
 				}
 				else {
-					result[index] = sobel_operator(index, imgWidth, image);
-					result[index + 1] = sobel_operator(index + 1, imgWidth, image) << 8;
-					result[index + 2] = sobel_operator(index + 2, imgWidth, image) << 16;
-					result[index + 3] = sobel_operator(index + 3, imgWidth, image) << 24;
+					result[index] = Sobel_operator(index, imgWidth, image);
+					result[index + 1] = Sobel_operator(index + 1, imgWidth, image) << 8;
+					result[index + 2] = Sobel_operator(index + 2, imgWidth, image) << 16;
+					result[index + 3] = Sobel_operator(index + 3, imgWidth, image) << 24;
 					data = (result[index] | result[index + 1] | result[index+ 2] | result[index + 3]);
 					Write(address + index, data);
 				}
-				wait(clk->posedge_event);
+				wait(clk->posedge_event());
 			}
 		}
 
@@ -138,7 +138,7 @@ static inline uint8_t getVal(int index, int xDiff, int yDiff, int img_width, uin
 	return Y[index + (yDiff * img_width) + xDiff]; 
 };
 
-uint8_t Sobel::sobel_operator(const int index, const int imgWidth, uint8_t * image)
+uint8_t Sobel::Sobel_operator(const int index, const int imgWidth, uint8_t * image)
 {
 	int x_weight = 0;
 	int y_weight = 0;
