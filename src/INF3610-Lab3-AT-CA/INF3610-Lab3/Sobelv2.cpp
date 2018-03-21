@@ -12,7 +12,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 Sobelv2::Sobelv2(sc_module_name name) : sc_module(name)
-/* À compléter */
+/* Ã€ complÃ©ter */
 {
 	SC_THREAD(thread);
 	sensitive << clk.pos();
@@ -28,7 +28,7 @@ Sobelv2::~Sobelv2()
 {
 	/*
 
-	À compléter
+	Ã€ complÃ©ter
 
 	*/
 }
@@ -42,7 +42,7 @@ Sobelv2::~Sobelv2()
 void Sobelv2::thread(void)
 {
 	/*
-	À compléter
+	Ã€ complÃ©ter
 	*/
 	unsigned int width = 0;
 	unsigned int height = 0;
@@ -71,7 +71,7 @@ void Sobelv2::thread(void)
 					image[i*width + j] = 0;
 				}
 				else {
-					wait(12); // On attend 12 cycles. Voir explication du temps de traitement dans Sobel.cpp.
+					wait(12); 
 					image[i*width + j] = Sobelv2_operator((addr - 8 - 3 * width) % (width * 4) + j, width, cache);
 				}
 			}
