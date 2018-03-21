@@ -104,15 +104,15 @@ void Sobel::thread(void)
 				if (i == 0 || i == imgHeight - 1) {
 					Write(address + index, 0);
 				}
-				else if (j % imgWidth == 0 || j % imgWidth == imgWidth - 1) {
+				else if (j == 0 || j  == imgWidth - 1) {
 					Write(address + index, 0);
 				}
 				else {
 					result[index] = Sobel_operator(index, imgWidth, image);
-					result[index + 1] = Sobel_operator(index + 1, imgWidth, image) << 8;
-					result[index + 2] = Sobel_operator(index + 2, imgWidth, image) << 16;
-					result[index + 3] = Sobel_operator(index + 3, imgWidth, image) << 24;
-					data = (result[index] | result[index + 1] | result[index+ 2] | result[index + 3]);
+					result[index + 1] = Sobel_operator(index + 1, imgWidth, image) ;
+					result[index + 2] = Sobel_operator(index + 2, imgWidth, image) ;
+					result[index + 3] = Sobel_operator(index + 3, imgWidth, image) ;
+					data = (result[index] << 24 | result[index + 1] << 16| result[index+ 2] << 8 | result[index + 3]);
 					Write(address + index, data);
 				}
 				wait(clk->posedge_event());

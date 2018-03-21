@@ -89,6 +89,7 @@ void Sobelv2::thread(void)
 		delete[] cache;
 		delete[] image;
 		sc_stop();
+		wait();
 	}
 
 }
