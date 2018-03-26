@@ -44,45 +44,47 @@ void Sobelv2::thread(void)
 	/*
 	À compléter
 	*/
-	unsigned int width = 0;
-	unsigned int height = 0;
-	unsigned int data = 0x00000000;
-	uint8_t* image = NULL;
-	uint8_t* cache = NULL;
-	unsigned int addr = 8;
+	unsigned int width, height, data;
+	unsigned int addr = 0;
 
 	while (true) {
-		width = Read(0);
-		height = Read(4);
-
-		cache = new uint8_t[4 * width]();
-		image = new uint8_t[height * width]();
+		width = Read(addr);
+		addr += 4;
+		height = Read(addr);
+		size = width * height;
+		uint8_t* cache = new uint8_t[4 * width];
+		uint8_t* image = new uint8_t[size];
 
 		CacheRead(addr, (unsigned int*)cache, 3 * width);
 		addr += 3 * width;
-
+		
+		int index = 0;
+		bool isCacheRead = false;
 		for (unsigned int i = 0; i < height; i++) {
-			if (i != 0 && i != height - 1) {
-				CacheRead(addr, ((unsigned int*)cache) + ((addr - 8) % (4 * width) / 4), width);
-				addr += width;
-			}
+			fCacheRead = false;
 			for (unsigned int j = 0; j < width; j++) {
+				index = i * imgWidth + j;
 				if (i == 0 || j == 0 || i == height - 1 || j == width - 1) {
-					image[i*width + j] = 0;
+					image[index] = 0;
+					Write(8 + index, 0);
 				}
 				else {
-					wait(12); 
-					image[i*width + j] = Sobelv2_operator((addr - 8 - 3 * width) % (width * 4) + j, width, cache);
+					if(!fCacheRead) {
+						CacheRead(addr, ((unsigned int*)cache) + ((addr - 8) % (4 * width) / 4), width);
+						addr += width;
+						fCacheRead = true;
+					}
+					image[index] = Sobelv2_operator((addr - 8 - 3 * width) % (width * 4) + j, width, cache);
+					wait(clk->posedge_event());
 				}
 			}
 		}
 
 		for (unsigned int i = 0; i < height; i++) {
 			for (unsigned int j = 0; j < width; j += 4) {
-				Write(8 + (i*width) + j, image[i*width + j] +
-					(image[i*width + j + 1] << 8) +
-					(image[i*width + j + 2] << 16) +
-					(image[i*width + j + 3] << 24));
+				index = i * imgWidth + j;
+				data = (image[index] << 24 | image[index + 1] << 16| image[index+ 2] << 8 | image[index + 3])
+				Write(8 + index, data));
 			}
 		}
 
