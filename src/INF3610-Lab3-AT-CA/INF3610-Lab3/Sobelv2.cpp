@@ -44,9 +44,9 @@ void Sobelv2::thread(void)
 	/*
 	À compléter
 	*/
-	unsigned int imgWidth, imgHeight, data, tampon, readSize;
+	unsigned int imgWidth, imgHeight, data, tampon, readSize, imgSize;
 	unsigned int addr = 0;
-	unsigned int addrRes = 0;
+	unsigned int * addrRes = 0;
 	while (true) {
 		imgWidth = Read(addr);
 		addr += 4;
@@ -54,14 +54,14 @@ void Sobelv2::thread(void)
 		imgSize = imgWidth * imgHeight;
 		tampon = imgWidth * 4;
 		readSize = imgWidth * 3;
-		addrRes = (unsigned int*)cache
 		uint8_t* cache = new uint8_t[tampon];
+		addrRes = (unsigned int*)cache;
 		uint8_t* image = new uint8_t[imgSize];
 		CacheRead(addr, addrRes, readSize);
 		addr += readSize;
 		
 		int index = 0;
-		bool isCacheRead = false;
+		bool fCacheRead = false;
 		for (int i = 0; i < imgHeight; i++) {
 			fCacheRead = false;
 			for (int j = 0; j < imgWidth; j++) {
@@ -86,8 +86,8 @@ void Sobelv2::thread(void)
 		for (int i = 0; i < imgHeight; i++) {
 			for (int j = 0; j < imgWidth; j += 4) {
 				index = i * imgWidth + j;
-				data = (image[index] << 24 | image[index + 1] << 16| image[index + 2] << 8 | image[index + 3])
-				Write(index + 8, data));
+				data = (image[index] << 24 | image[index + 1] << 16 | image[index + 2] << 8 | image[index + 3]);
+				Write(index + 8, data);
 			}
 		}
 
