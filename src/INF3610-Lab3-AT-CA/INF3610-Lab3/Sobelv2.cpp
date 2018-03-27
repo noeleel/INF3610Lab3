@@ -44,52 +44,55 @@ void Sobelv2::thread(void)
 	/*
 	À compléter
 	*/
-	unsigned int width, height, data;
+	unsigned int imgWidth, imgHeight, data, tampon, readSize;
 	unsigned int addr = 0;
-
+	unsigned int addrRes = 0;
 	while (true) {
-		width = Read(addr);
+		imgWidth = Read(addr);
 		addr += 4;
-		height = Read(addr);
-		size = width * height;
-		uint8_t* cache = new uint8_t[4 * width];
-		uint8_t* image = new uint8_t[size];
-
-		CacheRead(addr, (unsigned int*)cache, 3 * width);
-		addr += 3 * width;
+		imgHeight = Read(addr);
+		imgSize = imgWidth * imgHeight;
+		tampon = imgWidth * 4;
+		readSize = imgWidth * 3;
+		addrRes = (unsigned int*)cache
+		uint8_t* cache = new uint8_t[tampon];
+		uint8_t* image = new uint8_t[imgSize];
+		CacheRead(addr, addrRes, readSize);
+		addr += readSize;
 		
 		int index = 0;
 		bool isCacheRead = false;
-		for (unsigned int i = 0; i < height; i++) {
+		for (int i = 0; i < imgHeight; i++) {
 			fCacheRead = false;
-			for (unsigned int j = 0; j < width; j++) {
+			for (int j = 0; j < imgWidth; j++) {
 				index = i * imgWidth + j;
-				if (i == 0 || j == 0 || i == height - 1 || j == width - 1) {
+				if (i == 0 || j == 0 || i == imgHeight - 1 || j == imgWidth - 1) {
 					image[index] = 0;
-					Write(8 + index, 0);
+					Write(index + 8, 0);
 				}
 				else {
 					if(!fCacheRead) {
-						CacheRead(addr, ((unsigned int*)cache) + ((addr - 8) % (4 * width) / 4), width);
-						addr += width;
+						addrRes = (unsigned int*)cache + (((readSize + (i * imgWidth) - 4) % tampon) / 4);
+						CacheRead(addr, addrRes, imgWidth);
+						addr += imgWidth;
 						fCacheRead = true;
 					}
-					image[index] = Sobelv2_operator((addr - 8 - 3 * width) % (width * 4) + j, width, cache);
+					image[index] = Sobelv2_operator(((addr - readSize - 8) % tampon) + j, imgWidth, cache);
 					wait(clk->posedge_event());
 				}
 			}
 		}
 
-		for (unsigned int i = 0; i < height; i++) {
-			for (unsigned int j = 0; j < width; j += 4) {
+		for (int i = 0; i < imgHeight; i++) {
+			for (int j = 0; j < imgWidth; j += 4) {
 				index = i * imgWidth + j;
-				data = (image[index] << 24 | image[index + 1] << 16| image[index+ 2] << 8 | image[index + 3])
-				Write(8 + index, data));
+				data = (image[index] << 24 | image[index + 1] << 16| image[index + 2] << 8 | image[index + 3])
+				Write(index + 8, data));
 			}
 		}
 
-		delete[] cache;
-		delete[] image;
+		delete cache;
+		delete image;
 		sc_stop();
 		wait();
 	}
